@@ -25,6 +25,7 @@ import {
   isEmitListener,
   isKeepAlive,
   isVNode,
+  isHydrating as isVdomHydrating,
   normalizeRef,
   onScopeDispose,
   queuePostFlushCb,
@@ -218,6 +219,7 @@ const vaporInteropImpl: Omit<
   },
 
   hydrate(vnode, node, container, anchor, parentComponent, parentSuspense) {
+    if (!isHydrating && !isVdomHydrating) return node
     vaporHydrateNode(node, () =>
       this.mount(vnode, container, anchor, parentComponent, parentSuspense),
     )
@@ -225,6 +227,7 @@ const vaporInteropImpl: Omit<
   },
 
   hydrateSlot(vnode, node) {
+    if (!isHydrating && !isVdomHydrating) return node
     const { slot } = vnode.vs!
     const propsRef = (vnode.vs!.ref = shallowRef(vnode.props))
     vaporHydrateNode(node, () => {

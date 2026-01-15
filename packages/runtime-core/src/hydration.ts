@@ -53,6 +53,13 @@ import { isAsyncWrapper } from './apiAsyncComponent'
 import { isReactive } from '@vue/reactivity'
 import { updateHOCHostEl } from './componentRenderUtils'
 
+/**
+ * This is used for tree-shaking:
+ * In non-hydration builds, this module is dropped, so the logic in
+ * vdomInterop's hydrate/hydrateSlot can be tree-shaken.
+ */
+export let isHydrating = false
+
 export type RootHydrateFunction = (
   vnode: VNode<Node, Element>,
   container: (Element | ShadowRoot) & { _vnode?: VNode },
@@ -126,6 +133,7 @@ export function createHydrationFunctions(
   } = rendererInternals
 
   const hydrate: RootHydrateFunction = (vnode, container) => {
+    isHydrating = true
     if (!container.hasChildNodes()) {
       ;(__DEV__ || __FEATURE_PROD_HYDRATION_MISMATCH_DETAILS__) &&
         warn(
@@ -135,12 +143,14 @@ export function createHydrationFunctions(
       patch(null, vnode, container)
       flushPostFlushCbs()
       container._vnode = vnode
+      isHydrating = false
       return
     }
 
     hydrateNode(container.firstChild!, vnode, null, null, null)
     flushPostFlushCbs()
     container._vnode = vnode
+    isHydrating = false
   }
 
   const hydrateNode = (
